@@ -225,7 +225,7 @@ public final class RedisClient implements EventloopService, ConnectionPool {
 					messaging.setCloseable($ -> tempQueue.recycle());
 					return messaging;
 				})
-				.thenEx(wrapException(() -> "Failed to connect to Redis server"))
+				.thenEx(wrapException(() -> "Failed to connect to Redis server: " + address))
 				.whenComplete(toLogger(logger, TRACE, "connect", this));
 	}
 

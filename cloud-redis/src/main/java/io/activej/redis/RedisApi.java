@@ -57,6 +57,8 @@ public interface RedisApi {
 	// endregion
 
 	// region server
+	Promise<Long> dbsize();
+
 	Promise<Void> flushAll(boolean async);
 	// endregion
 
@@ -129,9 +131,9 @@ public interface RedisApi {
 
 	Promise<ScanResult> scan(String cursor, ScanModifier... modifiers);
 
-	Promise<ScanResult> scan(String cursor, RedisType type,  ScanModifier... modifiers);
+	Promise<ScanResult> scan(String cursor, RedisType type, ScanModifier... modifiers);
 
-	ChannelSupplier<String> scanStream(ScanModifier...modifiers);
+	ChannelSupplier<String> scanStream(ScanModifier... modifiers);
 
 	ChannelSupplier<byte[]> scanStreamAsBinary(ScanModifier... modifiers);
 
@@ -547,14 +549,16 @@ public interface RedisApi {
 
 	Promise<@Nullable List<SetPopResult>> zpopmax(String key, long count);
 
-	default Promise<@Nullable List<SetPopResult>> zpopmax(String key) {
-		return zpopmax(key, 1);
+	default Promise<@Nullable SetPopResult> zpopmax(String key) {
+		return zpopmax(key, 1)
+				.map(results -> results == null ? null : results.get(0));
 	}
 
 	Promise<@Nullable List<SetPopResult>> zpopmin(String key, long count);
 
-	default Promise<@Nullable List<SetPopResult>> zpopmin(String key) {
-		return zpopmin(key, 1);
+	default Promise<@Nullable SetPopResult> zpopmin(String key) {
+		return zpopmin(key, 1)
+				.map(results -> results == null ? null : results.get(0));
 	}
 
 	Promise<List<String>> zrange(String key, long start, long stop);

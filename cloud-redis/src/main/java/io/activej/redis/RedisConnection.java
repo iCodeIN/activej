@@ -136,6 +136,11 @@ public final class RedisConnection implements RedisApi, Connection {
 
 	// region server
 	@Override
+	public Promise<Long> dbsize() {
+		return send(RedisCommand.of(DBSIZE), RedisConnection::parseInteger);
+	}
+
+	@Override
 	public Promise<Void> flushAll(boolean async) {
 		return async ?
 				send(RedisCommand.of(FLUSHALL, ASYNC.getBytes(charset)), RedisConnection::expectOk) :

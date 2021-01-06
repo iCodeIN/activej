@@ -27,7 +27,7 @@ enum Command {
 
 
 	// Server
-	FLUSHALL,
+	DBSIZE, FLUSHALL,
 
 
 	// Keys

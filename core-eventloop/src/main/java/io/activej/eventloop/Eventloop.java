@@ -99,18 +99,6 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	private static volatile FatalErrorHandler globalFatalErrorHandler = FatalErrorHandlers.ignoreAllErrors();
 
 	/**
-	 * Collection of local tasks which were added from this thread.
-	 */
-	private final ArrayDeque<Runnable> localTasks = new ArrayDeque<>();
-
-	private final ArrayList<Runnable> nextTasks = new ArrayList<>();
-
-	/**
-	 * Collection of concurrent tasks which were added from other threads.
-	 */
-	private final ConcurrentLinkedQueue<Runnable> concurrentTasks = new ConcurrentLinkedQueue<>();
-
-	/**
 	 * Collection of scheduled tasks that are scheduled
 	 * to be executed at particular timestamp.
 	 */
@@ -121,6 +109,18 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 * if eventloop contains only background tasks, it will be closed.
 	 */
 	private final PriorityQueue<ScheduledRunnable> backgroundTasks = new PriorityQueue<>();
+
+	/**
+	 * Collection of local tasks which were added from this thread.
+	 */
+	private final ArrayDeque<Runnable> localTasks = new ArrayDeque<>();
+
+	private final ArrayDeque<Runnable> lastTasks = new ArrayDeque<>();
+
+	/**
+	 * Collection of concurrent tasks which were added from other threads.
+	 */
+	private final ConcurrentLinkedQueue<Runnable> concurrentTasks = new ConcurrentLinkedQueue<>();
 
 	/**
 	 * Amount of concurrent operations in other threads,
@@ -416,6 +416,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			int scheduledTasks = executeScheduledTasks();
 			int backgroundTasks = executeBackgroundTasks();
 			int localTasks = executeLocalTasks();
+			int lastTasks = executeLastTasks();
 
 			if (inspector != null) {
 				if (timeAfterBusinessLogic != 0) {
@@ -609,15 +610,34 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 			localTasks++;
 		}
 
-		this.localTasks.addAll(nextTasks);
-		this.nextTasks.clear();
-
 		if (localTasks != 0) {
 			long loopTime = refreshTimestampAndGet() - startTimestamp;
 			if (inspector != null) inspector.onUpdateLocalTasksStats(localTasks, loopTime);
 		}
 
 		return localTasks;
+	}
+
+	/**
+	 * Executes last tasks which were added from current thread
+	 */
+	private int executeLastTasks() {
+		int lastTasks = this.lastTasks.size();
+		for (int i = 0; i < lastTasks; i++) {
+			Runnable runnable = this.lastTasks.pollFirst();
+			try {
+				//noinspection ConstantConditions
+				executeTask(runnable);
+			} catch (Throwable e) {
+				onFatalError(e, runnable);
+			}
+		}
+
+		if (lastTasks != 0) {
+			if (inspector != null) inspector.onUpdateLastTasksStats(lastTasks, this.localTasks.size());
+		}
+
+		return lastTasks;
 	}
 
 	/**
@@ -979,12 +999,7 @@ public final class Eventloop implements Runnable, EventloopExecutor, Scheduler, 
 	 */
 	public void postLast(@NotNull @Async.Schedule Runnable runnable) {
 		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
-		localTasks.addLast(runnable);
-	}
-
-	public void postNext(@NotNull @Async.Schedule Runnable runnable) {
-		if (CHECK) checkState(inEventloopThread(), "Not in eventloop thread");
-		nextTasks.add(runnable);
+		lastTasks.addLast(runnable);
 	}
 
 	/**

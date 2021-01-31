@@ -84,7 +84,6 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	private MemSize initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE;
 	@Nullable
 	private FrameFormat frameFormat;
-	private Duration autoFlushInterval = Duration.ZERO;
 
 	private final Map<Class<?>, RpcRequestHandler<?, ?>> handlers = new LinkedHashMap<>();
 	private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -170,12 +169,6 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 		return this;
 	}
 
-	@SuppressWarnings("UnusedReturnValue")
-	public RpcServer withAutoFlushInterval(Duration autoFlushInterval) {
-		this.autoFlushInterval = autoFlushInterval;
-		return this;
-	}
-
 	/**
 	 * Adds a handler for a specified request-response pair.
 	 *
@@ -197,7 +190,7 @@ public final class RpcServer extends AbstractServer<RpcServer> {
 	@Override
 	protected void serve(AsyncTcpSocket socket, InetAddress remoteAddress) {
 		RpcStream stream = new RpcStream(socket, serializer, initialBufferSize,
-				autoFlushInterval, frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
+				frameFormat, true); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 		RpcServerConnection connection = new RpcServerConnection(this, remoteAddress, handlers, stream);
 		stream.setListener(connection);
 		add(connection);

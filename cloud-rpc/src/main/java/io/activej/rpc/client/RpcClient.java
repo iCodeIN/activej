@@ -108,7 +108,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 	private MemSize defaultPacketSize = DEFAULT_PACKET_SIZE;
 	@Nullable
 	private FrameFormat frameFormat;
-	private Duration autoFlushInterval = Duration.ZERO;
 	private Duration keepAliveInterval = Duration.ZERO;
 
 	private List<Class<?>> messageTypes;
@@ -236,11 +235,6 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 		return this;
 	}
 
-	public RpcClient withAutoFlush(Duration autoFlushInterval) {
-		this.autoFlushInterval = autoFlushInterval;
-		return this;
-	}
-
 	public RpcClient withKeepAlive(Duration keepAliveInterval) {
 		this.keepAliveInterval = keepAliveInterval;
 		return this;
@@ -347,7 +341,7 @@ public final class RpcClient implements IRpcClient, EventloopService, WithInitia
 							asyncTcpSocketImpl :
 							wrapClientSocket(asyncTcpSocketImpl, sslContext, sslExecutor);
 					RpcStream stream = new RpcStream(socket, serializer, defaultPacketSize,
-							autoFlushInterval, frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
+							frameFormat, false); // , statsSerializer, statsDeserializer, statsCompressor, statsDecompressor);
 					RpcClientConnection connection = new RpcClientConnection(eventloop, this, address, stream, keepAliveInterval.toMillis());
 					stream.setListener(connection);
 

@@ -80,13 +80,12 @@ public final class RpcStream {
 	public RpcStream(AsyncTcpSocket socket,
 			BinarySerializer<RpcMessage> messageSerializer,
 			MemSize initialBufferSize,
-			Duration autoFlushInterval, @Nullable FrameFormat frameFormat, boolean server) {
+			@Nullable FrameFormat frameFormat, boolean server) {
 		this.server = server;
 		this.socket = socket;
 
 		ChannelSerializer<RpcMessage> serializer = ChannelSerializer.create(messageSerializer)
 				.withInitialBufferSize(initialBufferSize)
-				.withAutoFlushInterval(autoFlushInterval)
 				.withSerializationErrorHandler((message, e) -> listener.onSerializationError(message, e));
 		ChannelDeserializer<RpcMessage> deserializer = ChannelDeserializer.create(messageSerializer);
 

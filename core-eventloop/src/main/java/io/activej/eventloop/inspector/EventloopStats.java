@@ -129,7 +129,13 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		tasks.local.tasksPerLoop.recordValue(localTasks);
 	}
 
-	@Override
+    @Override
+    public void onUpdateLastTasksStats(int lastTasks, int newTasks) {
+		tasks.last.tasksPerLoop.recordValue(lastTasks);
+		tasks.last.newTasks.recordValue(newTasks);
+    }
+
+    @Override
 	public void onUpdateConcurrentTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
 		updateTaskDuration(tasks.concurrent.oneTaskTime, tasks.concurrent.longestTask, runnable, sw);
 	}
@@ -242,12 +248,14 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		private final TaskStats concurrent;
 		private final ScheduledTaskStats scheduled;
 		private final ScheduledTaskStats background;
+		private final LastTasksStats last;
 
 		Tasks() {
 			local = new TaskStats();
 			concurrent = new TaskStats();
 			scheduled = new ScheduledTaskStats();
 			background = new ScheduledTaskStats();
+			last = new LastTasksStats();
 		}
 
 		@JmxAttribute
@@ -268,6 +276,11 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		@JmxAttribute
 		public ScheduledTaskStats getBackground() {
 			return background;
+		}
+
+		@JmxAttribute
+		public LastTasksStats getLast() {
+			return last;
 		}
 	}
 
@@ -303,6 +316,32 @@ public final class EventloopStats extends AbstractInspector<EventloopInspector> 
 		@JmxAttribute
 		public DurationRunnable getLongestTask() {
 			return longestTask;
+		}
+
+		@JmxAttribute(reducer = JmxReducerSum.class)
+		public int getCount() {
+			return (int) tasksPerLoop.getLastValue();
+		}
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public static class LastTasksStats {
+		private final ValueStats tasksPerLoop;
+		private final ValueStats newTasks;
+
+		LastTasksStats() {
+			this.tasksPerLoop = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withHistogram(POWERS_OF_TWO);
+			this.newTasks = ValueStats.create(DEFAULT_SMOOTHING_WINDOW).withHistogram(POWERS_OF_TWO);
+		}
+
+		@JmxAttribute(name = "perLoop", extraSubAttributes = "histogram")
+		public ValueStats getTasksPerLoop() {
+			return tasksPerLoop;
+		}
+
+		@JmxAttribute(extraSubAttributes = "histogram")
+		public ValueStats getNewTasks() {
+			return newTasks;
 		}
 
 		@JmxAttribute(reducer = JmxReducerSum.class)

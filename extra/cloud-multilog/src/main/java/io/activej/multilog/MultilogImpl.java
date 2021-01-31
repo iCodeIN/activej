@@ -120,7 +120,6 @@ public final class MultilogImpl<T> implements Multilog<T>, EventloopJmxBeanEx {
 		return Promise.of(StreamConsumer.<T>ofSupplier(
 				supplier -> supplier
 						.transformWith(ChannelSerializer.create(serializer)
-								.withAutoFlushInterval(autoFlushInterval)
 								.withInitialBufferSize(bufferSize)
 								.withSkipSerializationErrors())
 						.transformWith(streamWrites.register(logPartition))

@@ -201,7 +201,11 @@ public final class ThrottlingController implements EventloopJmxBean, EventloopIn
 	public void onUpdateLocalTasksStats(int localTasks, long loopTime) {
 	}
 
-	@Override
+    @Override
+    public void onUpdateLastTasksStats(int lastTasks, int newLocalTasks) {
+    }
+
+    @Override
 	public void onUpdateConcurrentTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw) {
 	}
 

@@ -36,6 +36,8 @@ public interface EventloopInspector extends BaseInspector<EventloopInspector> {
 
 	void onUpdateLocalTasksStats(int localTasks, long loopTime);
 
+	void onUpdateLastTasksStats(int lastTasks, int localTasksCreated);
+
 	void onUpdateConcurrentTaskDuration(@NotNull Runnable runnable, @Nullable Stopwatch sw);
 
 	void onUpdateConcurrentTasksStats(int newConcurrentTasks, long loopTime);

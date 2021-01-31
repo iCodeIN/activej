@@ -35,7 +35,6 @@ public final class Initializers {
 				.withInitializer(ofAbstractServer(config.getChild("rpc.server")))
 				.withStreamProtocol(
 						config.get(ofMemSize(), "rpc.streamProtocol.defaultPacketSize", DEFAULT_INITIAL_BUFFER_SIZE),
-						config.get(ofFrameFormat(), "rpc.streamProtocol.frameFormat", null))
-				.withAutoFlushInterval(config.get(ofDuration(), "rpc.flushDelay", Duration.ZERO));
+						config.get(ofFrameFormat(), "rpc.streamProtocol.frameFormat", null));
 	}
 }
